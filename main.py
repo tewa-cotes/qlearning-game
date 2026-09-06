@@ -14,5 +14,5 @@ controller = Controll(
     game
 )
 
-controller.main(100000,10000)
+controller.main(300000,30000)
 
