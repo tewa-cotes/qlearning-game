@@ -5,7 +5,7 @@ from qlearning import Qlearningcontroller
 
 game = Game()
 
-q_player = Qlearningcontroller(game, 1,"q_table1.csv")  # 0 = 新規学習
+q_player = Qlearningcontroller(game, 0,"q_table2.csv")  # 0 = 新規学習
 random_player = Randomcontroller(game)
 
 controller = Controll(
@@ -14,5 +14,5 @@ controller = Controll(
     game
 )
 
-controller.main(100000,50000)
+controller.main(10,50000)
 

@@ -1,5 +1,4 @@
-import csv
-import ast
+import pickle
 import random
 import  json
 from pathlib import Path
@@ -13,7 +12,7 @@ class Qlearningcontroller:
         self.q_table = {}
         self.state = self.get_state()
         
-        self.filename = Path(filename)
+        self.filename = Path(filename).with_suffix(".pkl")
         self.history_dir = self.filename.parent / f"{self.filename.stem}_history"
         self.meta_filename = self.filename.with_name(self.filename.stem + "history")
         self.trained_games = 0
@@ -29,20 +28,8 @@ class Qlearningcontroller:
         self.prev_move = None
         self.prev_state = None
     def get_q_tabel(self):
-        q_table = {}
-        with open(self.filename,"r",encoding = "utf-8") as file:
-            reader = csv.reader(file)
-            next(reader)
-
-            for row in reader:
-                state = ast.literal_eval(row[0])
-                action = ast.literal_eval(row[1])
-                q = float(row[2])
-
-                if state not in q_table:
-                    q_table[state] = {}
-                q_table[state][action] = q
-        self.q_table = q_table
+        with open(self.filename, "rb") as file:
+            self.q_table = pickle.load(file)
 
     def check_state(self):# board、stateを更新してからじゃないとだめ
         legal_moves = self.game.get_legal_moves()
@@ -83,12 +70,8 @@ class Qlearningcontroller:
     def write_csv(self, filename=None):
         if filename is None:
             filename = self.filename
-        with open(filename,"w",newline="",encoding="utf-8") as file:
-            writer = csv.writer(file)
-            writer.writerow(["state", "action", "q"])
-            for state, moves in self.q_table.items():
-                for move, q in moves.items():
-                    writer.writerow([state,move,q])
+        with open(filename, "wb") as file:
+            pickle.dump(self.q_table, file)
     def save_meta(self):
         with open(self.meta_filename, "w", encoding="utf-8") as file:
             json.dump({"trained_games": self.trained_games}, file)
@@ -104,7 +87,7 @@ class Qlearningcontroller:
         # 履歴フォルダ
         self.history_dir.mkdir(parents=True, exist_ok=True)
 
-        history_file = (self.history_dir / f"{self.filename.stem}_{self.trained_games}.csv")
+        history_file = (self.history_dir / f"{self.filename.stem}_{self.trained_games}.pkl")
         self.write_csv(history_file)
 
         self.save_meta()
@@ -142,7 +125,6 @@ class Qlearningcontroller:
 
 
         
-
 
 
 
