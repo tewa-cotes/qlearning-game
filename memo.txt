@@ -7,4 +7,13 @@ gooleのgit　push
 cd ~/qlearning-game
 git pull
 
+googleの実行方法（放置できない
 python3 ~~.py
+
+gooleの実行方法（放置可能
+まず一回目
+tmux new -s qlearning
+次にこれ
+cd ~/qlearning-game
+source venv/bin/activate
+python3 -u main.py | tee train.log
