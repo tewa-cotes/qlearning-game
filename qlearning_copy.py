@@ -1,11 +1,10 @@
-import csv
 import pickle
 import random
 import  json
 from pathlib import Path
 class Qlearningcontroller:
 
-    def __init__(self,game, mode, filename, export_csv=False):#aが1→引き続き学習, 0なら新規学習
+    def __init__(self,game, mode, filename):#aが1→引き続き学習, 0なら新規学習
         self.alfa = 0.1 #学習率
         self.ganma = 0.95 #将来の価値の重み
         self.epsilon = 0.2 #ランダムに参照する確率
@@ -14,7 +13,6 @@ class Qlearningcontroller:
         self.state = self.get_state()
         
         self.filename = Path(filename).with_suffix(".pkl")
-        self.export_csv = export_csv
         self.history_dir = self.filename.parent / f"{self.filename.stem}_history"
         self.meta_filename = self.filename.with_name(self.filename.stem + "history")
         self.trained_games = 0
@@ -34,7 +32,11 @@ class Qlearningcontroller:
             self.q_table = pickle.load(file)
 
     def check_state(self):# board、stateを更新してからじゃないとだめ
-        pass
+        legal_moves = self.game.get_legal_moves()
+        if tuple(self.state) not in self.q_table:
+            self.q_table[tuple(self.state)] = {}
+            for a in legal_moves:
+                self.q_table[tuple(self.state)][tuple(a)] = 0
 
 
     def get_state(self):
@@ -55,11 +57,10 @@ class Qlearningcontroller:
     def select_move(self):
         self.check_state()
         if random.random() > self.epsilon:
-            legal_moves = self.game.get_legal_moves()
-            moves = self.q_table.get(tuple(self.state), {})
-            max_q = max(moves.get(tuple(move), 0) for move in legal_moves)
+            moves = self.q_table[tuple(self.state)]
+            max_q = max(moves.values())
 
-            best_moves = [move for move in legal_moves if moves.get(tuple(move), 0) == max_q]
+            best_moves = [move for move, q in moves.items() if q == max_q]
             return random.choice(best_moves)
 
             
@@ -80,14 +81,6 @@ class Qlearningcontroller:
         with open(self.meta_filename, "r", encoding="utf-8") as file:
             data = json.load(file)
         self.trained_games = data["trained_games"]
-    def export_csv_file(self):
-        csv_filename = self.filename.with_suffix(".csv")
-        with open(csv_filename, "w", newline="", encoding="utf-8") as file:
-            writer = csv.writer(file)
-            writer.writerow(["state", "action", "q"])
-            for state, actions in self.q_table.items():
-                for action, q in actions.items():
-                    writer.writerow([state, action, q])
     def save(self):
         # 最新版
         self.write_csv()
@@ -98,8 +91,6 @@ class Qlearningcontroller:
         self.write_csv(history_file)
 
         self.save_meta()
-        if self.export_csv:
-            self.export_csv_file()
     def update_state(self,move):
         cpc = self.game.current_player_color
         if move[0]:
@@ -110,25 +101,13 @@ class Qlearningcontroller:
             self.state[9 * move[2] + 3 * move[3] + move[1]] = cpc
             self.state[27 + 3 * cpc + move[1]] -= 1
     def update_q(self,r):
-        prev_q = self.q_table.get(tuple(self.prev_state), {}).get(tuple(self.prev_move), 0)
+        prev_q = self.q_table[tuple(self.prev_state)][tuple(self.prev_move)]
         if r:
             maxq = 0
         else:
-            legal_moves = self.game.get_legal_moves()
-            if legal_moves:
-                moves = self.q_table.get(tuple(self.state), {})
-                maxq = max(moves.get(tuple(move), 0) for move in legal_moves)
-            else:
-                maxq = 0
+            maxq = max(self.q_table[tuple(self.state)].values())
         q = prev_q + self.alfa * (r + self.ganma * maxq - prev_q)
-        if q != 0:
-            if tuple(self.prev_state) not in self.q_table:
-                self.q_table[tuple(self.prev_state)] = {}
-            self.q_table[tuple(self.prev_state)][tuple(self.prev_move)] = q
-        elif tuple(self.prev_state) in self.q_table and tuple(self.prev_move) in self.q_table[tuple(self.prev_state)]:
-            del self.q_table[tuple(self.prev_state)][tuple(self.prev_move)]
-            if not self.q_table[tuple(self.prev_state)]:
-                del self.q_table[tuple(self.prev_state)]
+        self.q_table[tuple(self.prev_state)][tuple(self.prev_move)] = q
          
     def qlearning(self):
         self.check_state()
@@ -146,5 +125,7 @@ class Qlearningcontroller:
 
 
         
+
+
 
 
