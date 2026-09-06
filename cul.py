@@ -8,7 +8,7 @@ from qlearning import Qlearningcontroller
 game = Game()
 
 # 例：Q-learning AI vs Random
-p1 = Qlearningcontroller(game, 1, "q_table1.csv")
+p1 = Qlearningcontroller(game, 0, "q_table2.csv")
 p2 = Randomcontroller(game)
 
 controller = Controll(p1, p2, game)

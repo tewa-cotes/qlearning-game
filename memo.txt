@@ -1,0 +1,10 @@
+macでのgit　push
+git add .
+git commit -m "update"
+git push
+
+gooleのgit　push
+cd ~/qlearning-game
+git pull
+
+python3 ~~.py
